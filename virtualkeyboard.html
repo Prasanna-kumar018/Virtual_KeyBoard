@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIRTUAL KEYBOARD</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .keyboard
+        {
+            width:100%;
+            background-color: rgb(0, 65, 52);
+            position: fixed;
+            left:0;
+            bottom:0;
+            box-shadow : 0px 0px 50px rgba(0,0,0,0.9);
+            transition: bottom 0.2s;
+            padding: 5px;
+        }
+        .keyboard_hidden
+        {
+            bottom:-100%;
+        }
+        .keyboard_keys
+        {
+            text-align: center;
+            width: 100%;
+        }
+        .keyboard_key
+        {
+            width: 4%;
+            /* height: auto; */
+            height: 45px;
+            font-size: 2rem;
+            border-radius:  5px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin:0.25em;
+            background-color:rgba(255, 255, 255,0.15);
+            color:whitesmoke;
+            outline: none;
+            padding:0;
+            cursor:pointer;
+            position:relative;
+            -webkit-tap-highlight-color: transparent;
+            /* border:none; */
+            vertical-align: top;
+        }
+        .keyboard_key:active
+        {
+            background-color: rgba(255, 255, 255,0.35);
+        }
+        .keyboard_key_wider
+        {
+            width:8%;
+        }
+        .keyboard_key_widerm
+        {
+            width: 10%;
+        }
+        .keyboard_key_widest
+        {
+            width: 12%;
+        }
+        .keyboard_key_widestm
+        {
+            width: 50%;
+        }
+        .keyboard_key_capslock::after
+        {
+            content: '';
+            position: absolute;
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255,0.20);
+            right:5%;
+            top:15%;
+        }
+         .keyboard_key_capslock_active::after 
+         {
+             background-color: greenyellow;
+         }
+         .keyboard_dark
+         {
+            background-color: rgba(0, 0, 0,0.35);
+         }
+    </style>
+
+</head>
+<body>
+       <textarea id="textarea" style="font-size: 2rem;" cols="60" rows="5"></textarea>
+       <script>
+        let audio = new Audio("./audios/click.mp3");
+        let ta=document.getElementById("textarea");
+        let keyboard=
+        {
+               elements : {
+                 main: null,
+                 keyboard_container:null
+               },
+               properties: 
+               {
+                value: "",
+                capslock: false,
+                opened: false
+               },
+               init: function ()
+               {
+                
+                 this.elements.main= document.createElement("div");
+                 this.elements.main.classList.add("keyboard");
+
+
+                 this.elements.keyboard_container=document.createElement("div");
+                 this.elements.keyboard_container.classList.add("keyboard_keys");
+                 this.elements.main.appendChild(this.elements.keyboard_container);
+                    //CREATE KEYS
+                    
+                 let keylayout =[
+                    "1" ,"2","3","4","5","6" ,"7","8", "9",  "0", "backspace",
+                    "q", "w" ,"e" , "r", "t" , "y" , "u", "i" , "o", "p" ,
+                    "keyboard_capslock", "a", "s" , "d", "f" , "g", "h" , "j", "k" , "l", "keyboard_return" ,
+                    "check_circle",  "z", "x" , "c", "v", "b", "n" ,"m" , ",", "." ,"?",
+                    "space_bar"     
+                ]
+                 keylayout.forEach((el)=>
+                 {
+                    let arr =["backspace", "p","keyboard_return","?"];
+                    let newbutton=document.createElement("button");
+                    newbutton.setAttribute("type","button");
+                    
+                     switch(el)
+                     {
+                        case "backspace":
+                            newbutton.classList.add("keyboard_key","keyboard_key_widerm");
+                            newbutton.setAttribute("id","backspace");
+                            newbutton.innerHTML= `<i class="material-icons">${el}</i>`;
+                            break;
+                         case "keyboard_capslock":
+                             newbutton.classList.add("keyboard_key", "keyboard_key_widerm","keyboard_key_capslock");
+                             newbutton.innerHTML = `<i class="material-icons">${el}</i>`;
+                             newbutton.setAttribute("id", "keyboard_capslock");
+                             break;
+                         case "check_circle":
+                             newbutton.classList.add("keyboard_key", "keyboard_key_widerm","keyboard_dark");
+                             newbutton.innerHTML = `<i class="material-icons">${el}</i>`;
+                             newbutton.setAttribute("id", "check_circle");
+                             break;
+                        case "space_bar":
+                             newbutton.classList.add("keyboard_key", "keyboard_key_widestm");
+                             newbutton.innerHTML = `<i class="material-icons">${el}</i>`;
+                             newbutton.setAttribute("id", "space_bar");
+                             break;
+                       case "keyboard_return":
+                             newbutton.classList.add("keyboard_key", "keyboard_key_widest");
+                             newbutton.innerHTML = `<i class="material-icons">${el}</i>`;
+                             newbutton.setAttribute("id", "keyboard_return");
+                             break;
+                        default:
+                            newbutton.classList.add("keyboard_key","normal");
+                            newbutton.innerText=el;
+                            
+                        }
+                     
+                    this.elements.keyboard_container.appendChild(newbutton);
+                    if(arr.indexOf(el)!==-1)
+                    {
+                     this.elements.keyboard_container.innerHTML+="<br>";    
+                    }
+                 });
+
+                 document.body.insertAdjacentElement("beforeend",this.elements.main);
+               },
+               _toggle_capslock: function (e)
+               {
+                 this.properties.capslock=!this.properties.capslock;
+                 this.capital(this.properties.capslock);
+                 e.classList.toggle("keyboard_key_capslock_active",this.properties.capslock);
+               },
+               capital: function(value)
+               {
+                  let capele = this.elements.keyboard_container.querySelectorAll(".normal");
+                 if(value)
+                 {
+                  capele.forEach((elem)=>
+                  {
+                    let v=String(elem.innerText);
+                    elem.innerText=v.toUpperCase();
+                  })
+                 }
+                 else
+                 {
+                    capele.forEach((elem) => {
+                         let v = String(elem.innerText);
+                         elem.innerText = v.toLowerCase();
+                     })
+                 }
+               },
+                trigger: function(value)
+               { 
+                 ta.value=value;        
+                 console.log(ta.value);         
+               },
+               events: function ()
+               {
+                  let element=document.getElementsByClassName("keyboard_key");
+                  console.log(typeof element);
+                  let ele=Array.from(element);
+                  ele.forEach((e)=>
+                  {
+                    e.addEventListener("click",()=>
+                    {
+                      audio.play();
+                      audio.playbackRate=1.8;
+                      ta.focus();
+                    if(e.id==="backspace")
+                    {
+                        keyboard.properties.value=keyboard.properties.value.substring(0,keyboard.properties.value.length-1);
+                        keyboard.trigger(keyboard.properties.value);
+                    }
+                    else if(e.id==="keyboard_capslock")
+                    {
+                       keyboard._toggle_capslock(e);
+                    }
+                    else if(e.id=== "check_circle")
+                    {   
+
+                        this.properties.opened=!this.properties.opened;
+                        e.parentElement.parentElement.classList.add("keyboard_hidden"); 
+                      ta.blur();
+
+                    }
+                    else if(e.id==="space_bar")
+                    {
+                       keyboard.properties.value +=" ";
+                        keyboard.trigger(keyboard.properties.value);
+                    }
+                    else if(e.id==="keyboard_return")
+                    {
+                         keyboard.properties.value += "\n";
+                        keyboard.trigger(keyboard.properties.value);
+                    }
+                    else 
+                    {
+                        keyboard.properties.value += e.innerText;
+                        keyboard.trigger(keyboard.properties.value);     
+                    }
+                       });
+                  });
+               }
+        }
+        document.addEventListener("DOMContentLoaded",()=>
+        {
+          
+            keyboard.init();
+            keyboard.events();
+            ta.addEventListener("input", function () {
+                keyboard.properties.value = ta.value;
+            });
+            ta.addEventListener("focus",function ()
+            {
+                document.getElementsByClassName("keyboard")[0].classList.remove("keyboard_hidden");
+
+            })
+
+        })
+       </script>
+</body>
+</html>
